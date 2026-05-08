@@ -46,6 +46,18 @@ export interface OrchestratorOptions {
     llmOutputTokens: number;
     model: Job['llm_model'];
   }) => number;
+  /**
+   * Optional lifecycle hook. Fires after each stage finishes, regardless of
+   * outcome. Used by the CLI to print live progress lines (ANCHOR §8.3).
+   */
+  onStageEnd?: (info: {
+    stage: 'crawl' | 'brief' | 'render' | 'deliver';
+    status: StageStatus;
+    durationMs: number;
+    record: StageRecord;
+    manifest: Manifest;
+    skipped: boolean;
+  }) => void;
 }
 
 /**
@@ -189,6 +201,7 @@ export async function runOrchestrator(args: {
     stage: StageName,
     body: () => Promise<{ artefacts: string[] }>,
   ): Promise<void> => {
+    const t0 = Date.now();
     if (resume && (await stageAlreadyDone(stage, runDir, manifest))) {
       if (manifest.stages[stage].status !== 'success') {
         await persistStage(manifestPath, manifest, stage, {
@@ -196,6 +209,14 @@ export async function runOrchestrator(args: {
           ended_at: manifest.stages[stage].ended_at ?? new Date().toISOString(),
         });
       }
+      options.onStageEnd?.({
+        stage,
+        status: 'success',
+        durationMs: Date.now() - t0,
+        record: manifest.stages[stage],
+        manifest,
+        skipped: true,
+      });
       return;
     }
     const startedAt = new Date().toISOString();
@@ -211,12 +232,28 @@ export async function runOrchestrator(args: {
         ended_at: new Date().toISOString(),
         artefacts,
       });
+      options.onStageEnd?.({
+        stage,
+        status: 'success',
+        durationMs: Date.now() - t0,
+        record: manifest.stages[stage],
+        manifest,
+        skipped: false,
+      });
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err);
       await persistStage(manifestPath, manifest, stage, {
         status: 'failed',
         ended_at: new Date().toISOString(),
         error: reason,
+      });
+      options.onStageEnd?.({
+        stage,
+        status: 'failed',
+        durationMs: Date.now() - t0,
+        record: manifest.stages[stage],
+        manifest,
+        skipped: false,
       });
       throw new Error(`runOrchestrator: stage "${stage}" failed: ${reason}`);
     }

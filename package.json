@@ -5,9 +5,9 @@
   "type": "module",
   "description": "Single-operator CLI that turns a natural-language prompt into a delivered PDF intelligence brief by chaining Firecrawl and Claude.",
   "scripts": {
-    "intel": "tsx src/cli.ts --",
-    "intel:list-clients": "tsx src/cli.ts list-clients --",
-    "intel:list-templates": "tsx src/cli.ts list-templates --",
+    "intel": "tsx src/cli.ts",
+    "intel:list-clients": "tsx src/cli.ts list-clients",
+    "intel:list-templates": "tsx src/cli.ts list-templates",
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
