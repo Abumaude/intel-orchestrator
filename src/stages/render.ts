@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mdToPdf } from 'md-to-pdf';
 
@@ -83,4 +83,24 @@ export async function renderPdf(args: RenderPdfArgs): Promise<void> {
   if (!existsSync(outputPath)) {
     throw new Error(`renderPdf: PDF was not written to ${outputPath}`);
   }
+}
+
+/** Arguments to `runRenderStage`. */
+export interface RunRenderStageArgs {
+  runDir: string;
+  runSlug: string;
+}
+
+/**
+ * Stage 3 (Render): converts `${runDir}/brief.md` to `${runDir}/brief.pdf`
+ * using the v1 stylesheet. Thin wrapper over `renderPdf` that the
+ * orchestrator calls (ANCHOR §2.4).
+ */
+export async function runRenderStage(args: RunRenderStageArgs): Promise<void> {
+  const { runDir, runSlug } = args;
+  await renderPdf({
+    markdownPath: join(runDir, 'brief.md'),
+    outputPath: join(runDir, 'brief.pdf'),
+    runSlug,
+  });
 }
