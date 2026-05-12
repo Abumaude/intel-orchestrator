@@ -1,7 +1,7 @@
 ---
 client_slug: operator
 display_name: Operator
-delivery_email: "[PLACEHOLDER — operator fills in their own email]"
+delivery_email: gentle.garawise@gmail.com
 default_template: market-intelligence
 notes: Self-runs and tests.
 ---
